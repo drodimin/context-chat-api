@@ -118,3 +118,5 @@ cython_debug/
 
 # Langchain-related files
 .langchain/
+
+/test-data
