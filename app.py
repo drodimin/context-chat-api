@@ -24,7 +24,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 app = Flask(__name__)
 cache = Cache(app)
 
-CORS(app, resources={r"/api/*": {"origins": ["http://localhost:3000", "http://localhost:3001"]}})
+CORS(app, resources={r"/api/*": {"origins": ["http://localhost:3002"]}})
 
 # Create a Blueprint for API routes
 api_blueprint = Blueprint('api', __name__)
@@ -35,13 +35,12 @@ llm = ChatOpenAI(api_key=OPENAI_API_KEY, model=Models.GPT_3_5_TURBO.value)
 prompt_template = ChatPromptTemplate.from_messages([
     ("system", "1. Role: Senior front-end engineer with expertise in React, Material UI, TypeScript, and MUI Styled Components.\
                 2. Task: Analyze and modify the provided code based on instructions.\
-                3. Response: Return the modified code in one snippet\
+                3. Response: Include modified and unmodified code in the response.\
      "),
     ("user", "{input}")
 ])
 
 chain = prompt_template | llm
-
 
 @api_blueprint.route('/process_command', methods=['POST'])
 @cache.cached(timeout=600, query_string=True) 
