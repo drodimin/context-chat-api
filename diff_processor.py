@@ -19,49 +19,6 @@ def generate_diff(original_text, modified_text):
     )
     return list(diff)
 
-def bundle_changes_old(diff):
-    """
-    Processes the diff to identify and bundle changes, handling special placeholders
-    that indicate unchanged code. The function categorizes each line in the diff as an
-    addition, deletion, or unchanged and bundles consecutive changes.
-    """
-    changes = []  # List to hold all structured changes
-    buffer = []  # Temporary buffer to hold consecutive changes of the same type
-    
-    def flush_buffer(change_type):
-        """Helper function to flush the buffer into the changes list."""
-        if buffer:
-            changes.append({'type': change_type, 'content': buffer.copy()})
-            buffer.clear()
-
-    for line in diff:
-        if line.startswith('---') or line.startswith('+++'):
-            continue  # Skip diff metadata lines
-        
-        content = line[1:].rstrip('\n')  # Extract the content without the diff symbol and newline
-        if line.startswith('+'):
-            if content in known_placeholders:
-                # If current addition is a known placeholder, discard previous deletions
-                if buffer and changes[-1]['type'] == 'deletion':
-                    changes.pop()  # Remove the last change if it was a deletion
-                    flush_buffer('unchanged')  # Flush as unchanged if buffer has content
-                continue  # Skip further processing for this line
-            flush_buffer('deletion')  # Flush any accumulated deletions
-            buffer.append(content)
-            flush_buffer('addition')  # Directly flush additions as they're not batched
-        elif line.startswith('-'):
-            flush_buffer('addition')  # Flush any accumulated additions
-            buffer.append(content)  # Accumulate deletions for potential batching
-        else:
-            # Handle unchanged lines by flushing the buffer as the previous type if not empty
-            flush_buffer('deletion' if buffer else 'unchanged')
-            changes.append({'type': 'unchanged', 'content': [content]})
-
-    # Flush any remaining changes in the buffer after processing all lines
-    flush_buffer('deletion' if buffer else 'unchanged')
-    
-    return changes
-
 
 def process_code_diff(original_code, modified_code):
     """
